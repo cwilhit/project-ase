@@ -1,0 +1,10 @@
+apiVersion: acme.co/v1alpha1
+kind: Firewall
+metadata:
+  name: example
+  namespace: default
+spec:
+  parameters:
+    location: "us-east1"
+    vnetName: "my-vnet"
+    firewallSubnetPrefix: "prefix"

@@ -1,0 +1,65 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xsites.acme.co
+spec:
+  claimNames:
+    kind: Sites
+    plural: sites
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XSites
+    plural: xsites
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: Sites is the Schema for the Sites API.
+        properties:
+          spec:
+            description: SitesSpec defines the desired state of Sites.
+            properties:
+              parameters:
+                properties:
+                  aseDnsSuffix:
+                    type: string
+                  aseName:
+                    type: string
+                  cosmosDbName:
+                    type: string
+                  keyVaultName:
+                    type: string
+                  location:
+                    type: string
+                  logAnalyticsWorkspace:
+                    type: string
+                  redisSubnetAddressPrefix:
+                    type: string
+                  sqlDatabaseName:
+                    type: string
+                  sqlServerName:
+                    type: string
+                  vnetName:
+                    type: string
+                  zoneRedundant:
+                    type: boolean
+                type: object
+            type: object
+          status:
+            description: SitesStatus defines the observed state of Sites.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""

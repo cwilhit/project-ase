@@ -1,0 +1,15 @@
+apiVersion: acme.co/v1alpha1
+kind: PrivateEndpoint
+metadata:
+  name: example
+  namespace: default
+spec: 
+  parameters:
+    location: 'east-us'
+    SubId: 'subscription'
+    vnetName: 'my-vnet'
+    sbName: 'bus'
+    sqlName: 'sql'
+    cosmosDBName : 'cosmos'
+    akvName: 'akv'
+    subnetAddressPrefix: 'prefix'

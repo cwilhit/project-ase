@@ -1,0 +1,12 @@
+apiVersion: acme.co/v1alpha1
+kind: Jumpbox
+metadata:
+  name: example
+  namespace: default
+spec: 
+  parameters:
+    location: 'east-us'
+    vnetName: 'my-vnet'
+    subnetAddressPrefix: 'prefix'
+    adminUsername: 'admin'
+    adminPassword: 'password'

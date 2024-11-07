@@ -1,0 +1,18 @@
+apiVersion: acme.co/v1alpha1
+kind: Sites
+metadata:
+  name: example
+  namespace: default
+spec:
+  parameters:
+    location: 'east-us'
+    vnetName: 'my-vnet'
+    redisSubnetAddressPrefix: 'prefix'
+    aseName: 'ase'
+    aseDnsSuffix: 'ase-suffix'
+    keyVaultName: 'kv'
+    cosmosDbName: 'cosmos-db'
+    sqlServerName: 'sql-server'
+    sqlDatabaseName: 'sql-db'
+    logAnalyticsWorkspace: 'log'
+    zoneRedundant: False

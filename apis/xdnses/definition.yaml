@@ -1,0 +1,49 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xdnses.acme.co
+spec:
+  claimNames:
+    kind: DNS
+    plural: dnses
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XDNS
+    plural: xdnses
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: DNS is the Schema for the DNS API.
+        properties:
+          spec:
+            description: DNSSpec defines the desired state of DNS.
+            properties:
+              parameters:
+                properties:
+                  ipAddress:
+                    type: string
+                  vnetName:
+                    type: string
+                  zoneName:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: DNSStatus defines the observed state of DNS.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""

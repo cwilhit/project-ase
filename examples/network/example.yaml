@@ -1,0 +1,10 @@
+apiVersion: acme.co/v1alpha1
+kind: Network
+metadata:
+  name: example
+  namespace: default
+spec:
+  parameters:
+    location: 'east-us'
+    vnetAddressPrefix: 'prefix'
+    existentVnetName: 'my-vnet'

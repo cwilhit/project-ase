@@ -1,0 +1,55 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xases.acme.co
+spec:
+  claimNames:
+    kind: ASE
+    plural: ases
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XASE
+    plural: xases
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: ASE is the Schema for the ASE API.
+        properties:
+          spec:
+            description: ASESpec defines the desired state of ASE.
+            properties:
+              parameters:
+                properties:
+                  aseSubnetAddressPrefix:
+                    type: string
+                  dedicatedHostCount:
+                    type: number
+                  location:
+                    type: string
+                  vnetName:
+                    type: string
+                  vnetRouteName:
+                    type: string
+                  zoneRedundant:
+                    type: boolean
+                type: object
+            type: object
+          status:
+            description: ASEStatus defines the observed state of ASE.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""

@@ -1,0 +1,14 @@
+apiVersion: acme.co/v1alpha1
+kind: Services
+metadata:
+  name: example
+  namespace: default
+spec: 
+  parameters:
+    location: 'east-us'
+    vnetName: 'my-vnet'
+    sqlAdminUserName: 'user'
+    sqlAdminPassword: 'pass'
+    sqlEntraIdAdminSid: 'sid'
+    zoneRedundant: false
+    allowedSubnetNames: 'subnet1,subnet2'

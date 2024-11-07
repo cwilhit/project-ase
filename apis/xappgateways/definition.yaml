@@ -1,0 +1,73 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xappgateways.acme.co
+spec:
+  claimNames:
+    kind: AppGateway
+    plural: appgateways
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XAppGateway
+    plural: xappgateways
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: AppGateway is the Schema for the AppGateway API.
+        properties:
+          spec:
+            description: AppGatewaySpec defines the desired state of AppGateway.
+            properties:
+              parameters:
+                properties:
+                  appgwApplications:
+                    items:
+                      properties:
+                        backendAddresses:
+                          items:
+                            type: string
+                          type: array
+                        certificate:
+                          properties:
+                            data:
+                              type: string
+                            password:
+                              type: string
+                          type: object
+                        hostName:
+                          type: string
+                        name:
+                          type: string
+                        probePath:
+                          type: string
+                      type: object
+                    type: array
+                  appgwZones:
+                    type: string
+                  location:
+                    type: string
+                  subnetAddressWithPrefix:
+                    type: string
+                  vnetName:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: AppGatewayStatus defines the observed state of AppGateway.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""

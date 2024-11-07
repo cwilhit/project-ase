@@ -1,0 +1,38 @@
+apiVersion: acme.co/v1alpha1
+kind: AppGateway
+metadata:
+  name: example
+  namespace: default
+spec:
+  parameters:
+    location: "us-east1"
+    vnetName: "test-vnet"
+    subnetAddressWithPrefix: "prefix"
+    appgwApplications:
+    - name: "app1"
+      hostName: "hostname"
+      backendAddresses:
+      - "address"
+      certificate:
+        data: "some-data"
+        password: "some-password"
+      probePath: "test"
+    appgwZones: "test"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: some-password
+  namespace: default
+type: Opaque
+data:
+  someKey: bWVnYV9zZWNyZXRfa2V5Cg==
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: some-data
+  namespace: default
+type: Opaque
+data:
+  someKey: bWVnYV9zZWNyZXRfa2V5Cg==

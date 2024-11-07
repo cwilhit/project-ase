@@ -1,0 +1,59 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xprivateendpoints.acme.co
+spec:
+  claimNames:
+    kind: PrivateEndpoint
+    plural: privateendpoints
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XPrivateEndpoint
+    plural: xprivateendpoints
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: PrivateEndpoint is the Schema for the PrivateEndpoint API.
+        properties:
+          spec:
+            description: PrivateEndpointSpec defines the desired state of PrivateEndpoint.
+            properties:
+              parameters:
+                properties:
+                  SubId:
+                    type: string
+                  akvName:
+                    type: string
+                  cosmosDBName:
+                    type: string
+                  location:
+                    type: string
+                  sbName:
+                    type: string
+                  sqlName:
+                    type: string
+                  subnetAddressPrefix:
+                    type: string
+                  vnetName:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: PrivateEndpointStatus defines the observed state of PrivateEndpoint.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""

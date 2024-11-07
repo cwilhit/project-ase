@@ -1,0 +1,53 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xjumpboxes.acme.co
+spec:
+  claimNames:
+    kind: Jumpbox
+    plural: jumpboxes
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XJumpbox
+    plural: xjumpboxes
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: Jumpbox is the Schema for the Jumpbox API.
+        properties:
+          spec:
+            description: JumpboxSpec defines the desired state of Jumpbox.
+            properties:
+              parameters:
+                properties:
+                  adminPassword:
+                    type: string
+                  adminUsername:
+                    type: string
+                  location:
+                    type: string
+                  subnetAddressPrefix:
+                    type: string
+                  vnetName:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: JumpboxStatus defines the observed state of Jumpbox.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""

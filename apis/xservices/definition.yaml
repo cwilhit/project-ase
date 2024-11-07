@@ -1,0 +1,57 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xservices.acme.co
+spec:
+  claimNames:
+    kind: Services
+    plural: services
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XServices
+    plural: xservices
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: Services is the Schema for the Services API.
+        properties:
+          spec:
+            description: ServicesSpec defines the desired state of Services.
+            properties:
+              parameters:
+                properties:
+                  allowedSubnetNames:
+                    type: string
+                  location:
+                    type: string
+                  sqlAdminPassword:
+                    type: string
+                  sqlAdminUserName:
+                    type: string
+                  sqlEntraIdAdminSid:
+                    type: string
+                  vnetName:
+                    type: string
+                  zoneRedundant:
+                    type: boolean
+                type: object
+            type: object
+          status:
+            description: ServicesStatus defines the observed state of Services.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""

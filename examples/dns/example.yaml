@@ -1,0 +1,10 @@
+apiVersion: acme.co/v1alpha1
+kind: DNS
+metadata:
+  name: example
+  namespace: default
+spec:
+  parameters:
+    vnetName: 'my-vnet'
+    zoneName: 'my-zone'
+    ipAddress: '192.168.1.1'

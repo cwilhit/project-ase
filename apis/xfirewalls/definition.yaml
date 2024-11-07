@@ -1,0 +1,49 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xfirewalls.acme.co
+spec:
+  claimNames:
+    kind: Firewall
+    plural: firewalls
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XFirewall
+    plural: xfirewalls
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: Firewall is the Schema for the Firewall API.
+        properties:
+          spec:
+            description: FirewallSpec defines the desired state of Firewall.
+            properties:
+              parameters:
+                properties:
+                  firewallSubnetPrefix:
+                    type: string
+                  location:
+                    type: string
+                  vnetName:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: FirewallStatus defines the observed state of Firewall.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""

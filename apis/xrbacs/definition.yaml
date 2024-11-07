@@ -1,0 +1,49 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xrbacs.acme.co
+spec:
+  claimNames:
+    kind: RBAC
+    plural: rbacs
+  group: acme.co
+  names:
+    categories:
+    - crossplane
+    kind: XRBAC
+    plural: xrbacs
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: RBAC is the Schema for the RBAC API.
+        properties:
+          spec:
+            description: RBACSpec defines the desired state of RBAC.
+            properties:
+              parameters:
+                properties:
+                  keyVaultName:
+                    type: string
+                  votingCounterFunctionIdentityPrincipalId:
+                    type: string
+                  votingWebAppIdentityPrincipalId:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: RBACStatus defines the observed state of RBAC.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+status:
+  controllers:
+    compositeResourceClaimType:
+      apiVersion: ""
+      kind: ""
+    compositeResourceType:
+      apiVersion: ""
+      kind: ""
