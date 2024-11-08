@@ -4,6 +4,7 @@ import models.io.upbound.azure.network.v1beta1 as networkv1beta1
 import models.io.upbound.azure.v1beta1 as v1beta1
 
 import json
+import crypto
 
 oxr = option("params").oxr # observed composite resource
 _ocds = option("params").ocds # observed composed resources
@@ -114,14 +115,15 @@ _body = json.encode({
     }
 })
 
+_aseuuid = _ocds["subnet-${parameters.vnetName}"]?.Resource?.status?.atProvider?.resourceGroupName
 _azapiRes = {
     apiVersion: 'resources.azapi.upbound.io/v1alpha1'
     kind: 'Resource'
-    metadata: _metadata('ase')
-    metadata.name: 'ase'
+    metadata: _metadata('ase-${_aseuuid}')
+    metadata.name: 'ase-${_aseuuid}'
     spec.forProvider = {
         location: parameters.location
-        name: 'ase'
+        name: 'ase-${_aseuuid}'
         type: "Microsoft.Web/hostingEnvironments@2022-03-01"
         parentId: '/subscriptions/038f2b7c-3265-43b8-8624-c9ad5da610a8/resourceGroups/${_rgName}'
         body: _body
