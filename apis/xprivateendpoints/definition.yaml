@@ -32,6 +32,8 @@ spec:
                     type: string
                   location:
                     type: string
+                  resourceGroup:
+                    type: string
                   sbName:
                     type: string
                   sqlName:

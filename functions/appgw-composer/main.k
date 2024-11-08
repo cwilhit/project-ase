@@ -2,6 +2,7 @@
 import models.co.acme.v1alpha1 as acmev1alpha1
 import models.io.upbound.azure.network.v1beta1 as networkv1beta1
 import regex
+import models.io.upbound.azure.v1beta1 as v1beta1
 
 oxr = option("params").oxr # observed composite resource
 _ocds = option("params").ocds # observed composed resources
@@ -15,49 +16,55 @@ _metadata = lambda name: str -> any {
     { annotations = { "krm.kcl.dev/composition-resource-name" = name }}
 }
 
-vnetName = parameters.vnetName
-location = parameters.location
-subnetAddressWithPrefix = parameters.subnetAddressWithPrefix
-appgwZones = parameters.appgwZones
-appgwApplications = parameters.appgwApplications
+_resourceId = lambda name: str -> str {
+    _ocds["${name}"]?.Resource?.status?.id
+}
 
 # some vars from appgw.bicep
-appGatewayName = '${vnetName}-appgw'
-subnetNameWithoutSegment = '${appGatewayName}-subnet'
-subnetName = '${vnetName}/${subnetNameWithoutSegment}'
-appgwId = "todo" # resourceId('Microsoft.Network/applicationGateways', appGatewayName)
-appgwSubnetId = "todo" # appGatewaySubnet.id
-appgwNSGName = '${vnetName}-appgw-NSG'
-appgwPublicIpAddressName = '${vnetName}-appgw-Ip'
-appGwPublicIpAddressId = "todo" # resourceId('Microsoft.Network/publicIPAddresses',appgwPublicIpAddressName)
-appgwIpConfigName = '${appGatewayName}-ipconfig'
-appgwFrontendName = '${appGatewayName}-frontend'
-appgwBackendName = '${appGatewayName}-backend-'
-appgwHttpSettingsName = '${appGatewayName}-httpsettings-'
-appgwHealthProbeName = '${appGatewayName}-healthprobe-'
-appgwListenerName = '${appGatewayName}-listener-'
-appgwSslCertificateName = '${appGatewayName}-ssl-'
-appgwRouteRulesName = '${appGatewayName}-routerules-'
-appgwAutoScaleMinCapacity = 0
-appgwAutoScaleMaxCapacity = 10
-appgwZonesArray = regex.split(appgwZones, ",")
+_appGatewayName = '${parameters.vnetName}-appgw'
+_subnetNameWithoutSegment = '${_appGatewayName}-subnet'
+_subnetName = '${parameters.vnetName}/${_subnetNameWithoutSegment}'
+_appgwId = _resourceId(_appGatewayName)
+_appgwSubnetId = _resourceId(_subnetName)
+_appgwNSGName = '${parameters.vnetName}-appgw-NSG'
+_appgwPublicIpAddressName = '${parameters.vnetName}-appgw-Ip'
+_appGwPublicIpAddressId = _resourceId(_appgwPublicIpAddressName)
+_appgwIpConfigName = '${_appGatewayName}-ipconfig'
+_appgwFrontendName = '${_appGatewayName}-frontend'
+_appgwBackendName = '${_appGatewayName}-backend-'
+_appgwHttpSettingsName = '${_appGatewayName}-httpsettings-'
+_appgwHealthProbeName = '${_appGatewayName}-healthprobe-'
+_appgwListenerName = '${_appGatewayName}-listener-'
+_appgwSslCertificateName = '${_appGatewayName}-ssl-'
+_appgwRouteRulesName = '${_appGatewayName}-routerules-'
+_appgwAutoScaleMinCapacity = 0
+_appgwAutoScaleMaxCapacity = 10
+_appgwZonesArray = regex.split(parameters.appgwZones, ",")
 
 _items = []
-_items += [networkv1beta1.PublicIP {
-    metadata: _metadata("${vnetName}-appgw-Ip")
+_items += [v1beta1.ResourceGroup {
+    metadata: _metadata("rg-${oxr.metadata.name}")
     spec.forProvider = {
-        location: location
+        location: parameters.location
+    }
+}]
+
+
+_items += [networkv1beta1.PublicIP {
+    metadata: _metadata("${_appgwPublicIpAddressName}")
+    spec.forProvider = {
+        location: parameters.location
         sku: "Standard"
         allocationMethod: 'Static'
     }
 }]
 
 _items += [networkv1beta1.SecurityGroup {
-    metadata: _metadata(appgwNSGName)
+    metadata: _metadata(_appgwNSGName)
     spec.forProvider = {
-        location: location
+        location: parameters.location
         tags: {
-            displayName: appgwNSGName
+            displayName: _appgwNSGName
         }
         securityRule = [{
             name: "APPGW-inbound-allow_infrastructure"
@@ -91,7 +98,7 @@ _items += [networkv1beta1.SecurityGroup {
                 '443'
             ]
             sourceAddressPrefix: 'Internet'
-            destinationAddressPrefix: subnetAddressWithPrefix
+            destinationAddressPrefix: parameters.subnetAddressWithPrefix
             access: 'Allow'
             priority: 202
             direction: 'Inbound'
@@ -99,49 +106,49 @@ _items += [networkv1beta1.SecurityGroup {
     }
 }]
 
+_items += [networkv1beta1.Subnet {
+    metadata: _metadata(_subnetName)
+    spec.forProvider = {
+        resourceGroupNameSelector.matchControllerRef: True
+        addressPrefixes: [
+            parameters.subnetAddressWithPrefix
+        ]
+        # networkSecurityGroup: { id: networkSecurityGroup.id, location: location }
+    }
+}]
+
 _items += [networkv1beta1.SubnetNetworkSecurityGroupAssociation {
-    metadata: _metadata("sga-${oxr.metadata.name}")
+    metadata: _metadata("sga-${_subnetName}")
     spec.forProvider = {
         subnetIdSelector.matchControllerRef: True
     }
 }]
 
-
-_items += [networkv1beta1.Subnet {
-    metadata: _metadata(subnetName)
-    spec.forProvider = {
-        addressPrefixes: [
-            subnetAddressWithPrefix
-        ]
-        virtualNetworkName: appgwNSGName
-        # networkSecurityGroup: { id: networkSecurityGroup.id, location: location }
-    }
-}]
-
 _items += [networkv1beta1.ApplicationGateway {
-    metadata: _metadata(appGatewayName)
+    metadata: _metadata(_appGatewayName)
     spec.forProvider = {
-        location: location
-        zones: appgwZonesArray
+        location: parameters.location
+        zones: _appgwZonesArray
+        tags: {}
         sku: [{
             name: 'WAF_v2'
             tier: 'WAF_v2'
         }]
         gatewayIpConfiguration: [{
-            name: appgwIpConfigName
-            subnetId: appgwSubnetId
+            name: _appgwIpConfigName
+            subnetIdSelector.matchControllerRef: True
         }]
         frontendIpConfiguration: [{
-            name: appgwFrontendName
-            publicIpAddressId: appGwPublicIpAddressId
+            name: _appgwFrontendName
+            publicIpAddressIdSelector.matchControllerRef: True
         }]
         frontendPort: [{
             name: 'port_443'
             port: 443
         }]
         autoscaleConfiguration: [{
-            minCapacity: appgwAutoScaleMinCapacity
-            maxCapacity: appgwAutoScaleMaxCapacity
+            minCapacity: _appgwAutoScaleMinCapacity
+            maxCapacity: _appgwAutoScaleMaxCapacity
         }]
         wafConfiguration:[{
             enabled: True
@@ -151,37 +158,37 @@ _items += [networkv1beta1.ApplicationGateway {
         }]
         enableHttp2: False
         backendAddressPool: [{
-            name: '${appgwBackendName}${item.name}'
+            name: '${_appgwBackendName}${item.name}'
             ipAddresses: item.backendAddresses
-        } for i, item in appgwApplications]
+        } for i, item in parameters.appgwApplications]
         backendHttpSettings: [{
-            name: '${appgwHttpSettingsName}${item.name}'
+            name: '${_appgwHttpSettingsName}${item.name}'
             port: 443
             protocol: 'Https'
             cookieBasedAffinity: 'Disabled'
             pickHostNameFromBackendAddress: True
             requestTimeout: 20
-            probeName: '${appgwId}/probes/${appgwHealthProbeName}${item.name}'
-        } for i, item in appgwApplications]
+            probeName: '${_appgwId}/probes/${_appgwHealthProbeName}${item.name}'
+        } for i, item in parameters.appgwApplications]
         httpListener: [{
-            name: '${appgwListenerName}${item.name}'
-            frontendIpConfigurationName: '${appgwId}/frontendIPConfigurations/${appgwFrontendName}'
-            frontendPortName: '${appgwId}/frontendPorts/port_443'
+            name: '${_appgwListenerName}${item.name}'
+            frontendIpConfigurationName: '${_appgwId}/frontendIPConfigurations/${_appgwFrontendName}'
+            frontendPortName: '${_appgwId}/frontendPorts/port_443'
             protocol: 'Https'
-            sslCertificateName: '${appgwId}/sslCertificates/${appgwSslCertificateName}${item.name}'
+            sslCertificateName: '${_appgwId}/sslCertificates/${_appgwSslCertificateName}${item.name}'
             hostName: item.hostName
             requireSni: True
-        } for i, item in appgwApplications]
+        } for i, item in parameters.appgwApplications]
         requestRoutingRule: [{
-            name: '${appgwRouteRulesName}${item.name}'
+            name: '${_appgwRouteRulesName}${item.name}'
             priority: 1 # fix
             ruleType: 'Basic'
-            httpListenerName:'${appgwId}/httpListeners/${appgwListenerName}${item.name}'
-            backendAddressPoolName: '${appgwId}/backendAddressPools/${appgwBackendName}${item.name}'
-            backendHttpSettingsName: '${appgwId}/backendHttpSettingsCollection/${appgwHttpSettingsName}${item.name}'
-        } for i, item in appgwApplications]
+            httpListenerName:'${_appgwId}/httpListeners/${_appgwListenerName}${item.name}'
+            backendAddressPoolName: '${_appgwId}/backendAddressPools/${_appgwBackendName}${item.name}'
+            backendHttpSettingsName: '${_appgwId}/backendHttpSettingsCollection/${_appgwHttpSettingsName}${item.name}'
+        } for i, item in parameters.appgwApplications]
         probe: [{
-            name: '${appgwHealthProbeName}${item.name}'
+            name: '${_appgwHealthProbeName}${item.name}'
             protocol: 'Https'
             path: item.probePath
             interval: 30
@@ -192,16 +199,16 @@ _items += [networkv1beta1.ApplicationGateway {
             match: [{
                 statusCode: ['200-399']
             }]
-        } for i, item in appgwApplications]
+        } for i, item in parameters.appgwApplications]
         sslCertificate: [{
-            name: '${appgwSslCertificateName}${item.name}'
+            name: '${_appgwSslCertificateName}${item.name}'
             dataSecretRef.name: item.certificate.data
             dataSecretRef.namespace: 'default'
             dataSecretRef.key: 'someKey'
             passwordSecretRef.name: item.certificate.password
             passwordSecretRef.key: 'someKey'
             passwordSecretRef.namespace: 'default'
-        } for i, item in appgwApplications]
+        } for i, item in parameters.appgwApplications]
     }
 }]
 

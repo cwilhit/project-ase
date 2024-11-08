@@ -5,6 +5,7 @@ metadata:
   namespace: default
 spec:
   parameters:
-    vnetName: 'my-vnet'
+    resourceGroup: 'example-wpzb2-p6mtb'
+    vnetName: 'example-wpzb2-g8xs4'
     zoneName: 'my-zone'
     ipAddress: '192.168.1.1'

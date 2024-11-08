@@ -50,6 +50,8 @@ spec:
                     type: string
                   location:
                     type: string
+                  resourceGroup:
+                    type: string
                   subnetAddressWithPrefix:
                     type: string
                   vnetName:

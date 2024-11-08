@@ -1,12 +1,5 @@
 
-import models.co.acme.v1alpha1 as acmev1alpha1
 import models.io.upbound.azure.network.v1beta1 as networkv1beta1
-import models.io.upbound.azure.network.v1beta2 as networkv1beta2
-import models.io.upbound.azure.v1alpha1 as azurev1alpha1
-import models.io.upbound.azure.v1beta1 as azurev1beta1
-import models.io.upbound.azure.web.v1beta1 as webv1beta1
-import models.io.upbound.azure.web.v1beta2 as webv1beta2
-import models.k8s.apimachinery.pkg.apis.meta.v1 as metav1
 
 oxr = option("params").oxr # observed composite resource
 _ocds = option("params").ocds # observed composed resources

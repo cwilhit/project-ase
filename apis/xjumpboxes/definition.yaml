@@ -30,6 +30,8 @@ spec:
                     type: string
                   location:
                     type: string
+                  resourceGroup:
+                    type: string
                   subnetAddressPrefix:
                     type: string
                   vnetName:

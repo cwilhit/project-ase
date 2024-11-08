@@ -5,6 +5,7 @@ metadata:
   namespace: default
 spec:
   parameters:
-    location: "us-east1"
-    vnetName: "my-vnet"
-    firewallSubnetPrefix: "prefix"
+    resourceGroup: 'example-wpzb2-p6mtb'
+    location: "eastus"
+    vnetName: "example-wpzb2-g8xs4"
+    firewallSubnetPrefix: "10.0.200.0/24"

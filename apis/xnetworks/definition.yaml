@@ -28,6 +28,8 @@ spec:
                     type: string
                   location:
                     type: string
+                  resourceGroup:
+                    type: string
                   vnetAddressPrefix:
                     type: string
                 type: object

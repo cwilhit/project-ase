@@ -1,11 +1,7 @@
 
 import models.co.acme.v1alpha1 as acmev1alpha1
 import models.io.upbound.azure.network.v1beta1 as networkv1beta1
-import models.io.upbound.azure.network.v1beta2 as networkv1beta2
-import models.io.upbound.azure.web.v1beta1 as webv1beta1
-import models.io.upbound.azure.v1alpha1 as azurev1alpha1
-import models.io.upbound.azure.v1beta1 as azurev1beta1
-import models.k8s.apimachinery.pkg.apis.meta.v1 as metav1
+import models.io.upbound.azure.v1beta1 as v1beta1
 
 import json
 
@@ -17,18 +13,9 @@ parameters = acmev1alpha1.AcmeCoV1alpha1ASESpecParameters {
     **oxr.spec.parameters
 }
 
-location = parameters.location
-vnetName =  parameters.vnetName
-vnetRouteName = parameters.vnetRouteName
-aseSubnetAddressPrefix = parameters.aseSubnetAddressPrefix
-dedicatedHostCount = parameters.dedicatedHostCount
-zoneRedundant = parameters.zoneRedundant
-
 # used internally
-aseName = "todo" # 'ASE-${uniqueString(resourceGroup().id)}'
 aseNSGName = "todo" # 'ASE-nsg-${uniqueString(resourceGroup().id)}'
 aseId = oxr.metadata.name
-aseSubnetName = 'ase-subnet-${aseName}-1'
 aseSubnetId = "todo" # aseSubnet.id
 aseLoadBalancingMode = 'Web, Publishing'
 
@@ -36,12 +23,29 @@ _metadata = lambda name: str -> any {
     { annotations = { "krm.kcl.dev/composition-resource-name" = name }}
 }
 
-
 _items = []
+_items += [v1beta1.ResourceGroup {
+    metadata: _metadata(parameters.resourceGroup)
+    metadata.annotations: {
+        'crossplane.io/external-name': parameters.resourceGroup
+    }
+    spec.managementPolicies: ['Observe']
+    spec.forProvider = {
+        location: parameters.location
+    }
+} if parameters.resourceGroup else v1beta1.ResourceGroup {
+    metadata: _metadata("rg-${oxr.metadata.name}")
+    spec.forProvider = {
+        location: parameters.location
+    }
+}] 
+
+_rgName = parameters.resourceGroup if parameters.resourceGroup else 'rg-${oxr.metadata.name}'
 
 _items += [networkv1beta1.SecurityGroup {
-    metadata: _metadata("sg-${oxr.metadata.name}")
+    metadata: _metadata("ase-${oxr.metadata.name}")
     spec.forProvider = {
+        resourceGroupName: _rgName
         location: parameters.location
         tags: {
             displayName: aseNSGName
@@ -76,10 +80,11 @@ _items += [networkv1beta1.SecurityGroup {
 }]
 
 _items += [networkv1beta1.Subnet {
-    metadata: _metadata("${vnetName}/${aseSubnetName}")
+    metadata: _metadata("subnet-${parameters.vnetName}")
     spec.forProvider = {
-        addressPrefixes: [aseSubnetAddressPrefix]
-        virtualNetworkNameSelector.matchControllerRef: True
+        resourceGroupName: _rgName
+        addressPrefixes: [parameters.aseSubnetAddressPrefix]
+        virtualNetworkName: parameters.vnetName
         delegation: [{
             name: 'Microsoft.Web.hostingEnvironments'
             serviceDelegation: [{
@@ -93,34 +98,36 @@ _items += [networkv1beta1.SubnetNetworkSecurityGroupAssociation {
     metadata: _metadata("sga-${oxr.metadata.name}")
     spec.forProvider = {
         subnetIdSelector.matchControllerRef: True
+        networkSecurityGroupIdSelector.matchControllerRef: True
     }
 }]
 
-_items += [networkv1beta1.SubnetRouteTableAssociation {
-    metadata: _metadata("rta-${oxr.metadata.name}")
-    spec.forProvider = {
-        subnetIdSelector.matchControllerRef: True
+_body = json.encode({
+    kind: 'ASEV3'
+    properties = {
+        dedicatedHostCount: parameters.dedicatedHostCount
+        zoneRedundant: parameters.zoneRedundant
+        internalLoadBalancingMode: aseLoadBalancingMode
+        virtualNetwork = {
+            id: _ocds["subnet-${parameters.vnetName}"]?.Resource?.status?.atProvider?.id
+        }
     }
-}]
+})
 
-_items += [{
+_azapiRes = {
     apiVersion: 'resources.azapi.upbound.io/v1alpha1'
     kind: 'Resource'
-    metadata: _metadata('some-name')
+    metadata: _metadata('ase')
+    metadata.name: 'ase'
     spec.forProvider = {
-        location = parameters.location
-        kind: 'ASEV3'
-        body = json.encode({
-            properties: {
-                dedicatedHostCount: dedicatedHostCount
-                zoneRedundant: zoneRedundant
-                internalLoadBalancingMode: aseLoadBalancingMode
-                virtualNetwork: {
-                    id: aseSubnetId 
-                }
-            }
-        })
+        location: parameters.location
+        name: 'ase'
+        type: "Microsoft.Web/hostingEnvironments@2022-03-01"
+        parentId: '/subscriptions/038f2b7c-3265-43b8-8624-c9ad5da610a8/resourceGroups/${_rgName}'
+        body: _body
     }
-}]
+}
+
+_items += [_azapiRes]
 
 items = _items

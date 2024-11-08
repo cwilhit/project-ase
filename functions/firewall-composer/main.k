@@ -1,42 +1,48 @@
 
 import models.co.acme.v1alpha1 as acmev1alpha1
 import models.io.upbound.azure.network.v1beta1 as networkv1beta1
-import models.io.upbound.azure.network.v1beta2 as networkv1beta2
-import models.io.upbound.azure.v1alpha1 as azurev1alpha1
-import models.io.upbound.azure.v1beta1 as azurev1beta1
-import models.io.upbound.azure.web.v1beta1 as webv1beta1
-import models.io.upbound.azure.web.v1beta2 as webv1beta2
-import models.k8s.apimachinery.pkg.apis.meta.v1 as metav1
+import models.io.upbound.azure.v1beta1 as v1beta1
 
 oxr = option("params").oxr # observed composite resource
 _ocds = option("params").ocds # observed composed resources
 _dxr = option("params").dxr # desired composite resource
 dcds = option("params").dcds # desired composed resources
+parameters = acmev1alpha1.AcmeCoV1alpha1FirewallSpecParameters {
+    **oxr.spec.parameters
+}
 
 _metadata = lambda name: str -> any {
     { annotations = { "krm.kcl.dev/composition-resource-name" = name }}
 }
 
-vnetName = oxr.spec.parameters.vnetName
-firewallSubnetPrefix = oxr.spec.parameters.firewallSubnetPrefix
-location = oxr.spec.parameters.location
-
-# internal vars
-firewallSubnetName = 'AzureFirewallSubnet'
-firewallPublicIpName = 'firewallIp-'
-firewallName = 'firewall-'
-
-# Example to retrieve variables from "xr"; update as needed
-# _region = "us-east-1"
-# if oxr.spec?.parameters?.region:
-#     _region = oxr.spec.parameters.region
-
 _items = []
+_items += [v1beta1.ResourceGroup {
+    metadata: _metadata(parameters.resourceGroup)
+    metadata.annotations: {
+        'crossplane.io/external-name': parameters.resourceGroup
+    }
+    spec.managementPolicies: ['Observe']
+    spec.forProvider = {
+        location: parameters.location
+    }
+} if parameters.resourceGroup else v1beta1.ResourceGroup {
+    metadata: _metadata("rg-${oxr.metadata.name}")
+    spec.forProvider = {
+        location: parameters.location
+    }
+}] 
+
+_rgName = parameters.resourceGroup if parameters.resourceGroup else 'rg-${oxr.metadata.name}'
 
 _items += [networkv1beta1.Subnet {
-    metadata: _metadata("${vnetName}/${firewallSubnetName}")
+    metadata: _metadata("AzureFirewallSubnet")
+    metadata.annotations: {
+        'crossplane.io/external-name': "AzureFirewallSubnet"
+    }
     spec.forProvider = {
-        addressPrefixes: [firewallSubnetPrefix]
+        virtualNetworkName: parameters.vnetName
+        resourceGroupName: _rgName
+        addressPrefixes: [parameters.firewallSubnetPrefix]
         virtualNetworkNameSelector.matchControllerRef: True
         serviceEndpoints: [
             'Microsoft.AzureCosmosDB',
@@ -48,9 +54,10 @@ _items += [networkv1beta1.Subnet {
 }]
 
 _items += [networkv1beta1.PublicIP {
-    metadata: _metadata("${firewallPublicIpName}")
+    metadata: _metadata("firewallIp-")
     spec.forProvider = {
-        location: location
+        resourceGroupName: _rgName
+        location: parameters.location
         sku: "Standard"
         allocationMethod: 'Static'
         ipVersion: 'IPv4'
@@ -59,9 +66,12 @@ _items += [networkv1beta1.PublicIP {
 }]
 
 _items += [networkv1beta1.Firewall {
-    metadata: _metadata("${firewallName}")
+    metadata: _metadata("firewall-")
     spec.forProvider = {
-        location: location
+        skuName: 'AZFW_VNet'
+        skuTier: 'standard'
+        resourceGroupName: _rgName
+        location: parameters.location
         threatIntelMode: 'Alert'
         ipConfiguration: [{
             name: 'clusterIpConfig'
@@ -74,6 +84,8 @@ _items += [networkv1beta1.Firewall {
 _items += [networkv1beta1.FirewallNetworkRuleCollection {
     metadata: _metadata("Time")
     spec.forProvider = {
+        azureFirewallNameSelector.matchControllerRef: True
+        resourceGroupName: _rgName
         priority: 300
         action: 'Allow'
         rule: [{
@@ -109,8 +121,10 @@ _items += [networkv1beta1.FirewallNetworkRuleCollection {
 }]
 
 _items += [networkv1beta1.FirewallNetworkRuleCollection {
-    metadata: _metadata("Time")
+    metadata: _metadata("AzureMonitor")
     spec.forProvider = {
+        azureFirewallNameSelector.matchControllerRef: True
+        resourceGroupName: _rgName
         priority: 500
         action: 'Allow'
         rule: [{
@@ -135,17 +149,19 @@ _items += [networkv1beta1.FirewallNetworkRuleCollection {
 _items += [networkv1beta1.FirewallApplicationRuleCollection {
     metadata: _metadata("AppServiceEnvironment")
     spec.forProvider = {
+        azureFirewallNameSelector.matchControllerRef: True
+        resourceGroupName: _rgName
         priority: 500
         action: 'Allow'
         rule: [{
             name: 'AppServiceEnvironment'
-            protocol: [{
-                type: 'Http'
-                port: 80
-            }, {
-                type: 'Https'
-                port: 443
-            }]
+            # protocol: [{
+            #     type: 'Http'
+            #     port: 80
+            # }, {
+            #     type: 'Https'
+            #     port: 443
+            # }]
             fqdnTags: [
                 'AppServiceEnvironment'
                 'WindowsUpdate'

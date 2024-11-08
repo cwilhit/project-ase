@@ -30,6 +30,8 @@ spec:
                     type: number
                   location:
                     type: string
+                  resourceGroup:
+                    type: string
                   vnetName:
                     type: string
                   vnetRouteName:

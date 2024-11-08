@@ -38,6 +38,8 @@ spec:
                     type: string
                   redisSubnetAddressPrefix:
                     type: string
+                  resourceGroup:
+                    type: string
                   sqlDatabaseName:
                     type: string
                   sqlServerName:

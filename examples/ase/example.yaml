@@ -5,9 +5,10 @@ metadata:
   namespace: default
 spec: 
   parameters:
-    location: "us-east1"
-    vnetName: "my-vnet"
+    resourceGroup: 'example-wpzb2-p6mtb'
+    location: "eastus"
+    vnetName: "example-wpzb2-g8xs4"
     vnetRouteName: "route"
-    aseSubnetAddressPrefix: "prefix"
+    aseSubnetAddressPrefix: "10.0.100.0/24"
     dedicatedHostCount: 0
     zoneRedundant: false

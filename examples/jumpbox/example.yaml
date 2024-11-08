@@ -5,7 +5,8 @@ metadata:
   namespace: default
 spec: 
   parameters:
-    location: 'east-us'
+    resourceGroup: 'my-rg'
+    location: 'eastus'
     vnetName: 'my-vnet'
     subnetAddressPrefix: 'prefix'
     adminUsername: 'admin'

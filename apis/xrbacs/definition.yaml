@@ -26,6 +26,8 @@ spec:
                 properties:
                   keyVaultName:
                     type: string
+                  resourceGroup:
+                    type: string
                   votingCounterFunctionIdentityPrincipalId:
                     type: string
                   votingWebAppIdentityPrincipalId:

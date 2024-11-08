@@ -26,6 +26,8 @@ spec:
                 properties:
                   ipAddress:
                     type: string
+                  resourceGroup:
+                    type: string
                   vnetName:
                     type: string
                   zoneName:

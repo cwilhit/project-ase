@@ -5,9 +5,10 @@ metadata:
   namespace: default
 spec:
   parameters:
-    location: "us-east1"
-    vnetName: "test-vnet"
-    subnetAddressWithPrefix: "prefix"
+    resourceGroup: 'example-wpzb2-p6mtb'
+    location: "eastus"
+    vnetName: "example-wpzb2-g8xs4"
+    subnetAddressWithPrefix: "10.0.1.0/24"
     appgwApplications:
     - name: "app1"
       hostName: "hostname"
